@@ -1,0 +1,7 @@
+import printf from io;
+import exit from os;
+
+void fn main() {
+    printf("Hello World");
+    exit(0);
+}
