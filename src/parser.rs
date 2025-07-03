@@ -186,26 +186,19 @@ impl<'a> Parser<'a> {
                     if !matches!(semicolon, Token::Semicolon) {
                         panic!("Expected semicolon");
                     }
-                    println!("ARGS ARGS");
                     if let Token::Literal(literal) = close_paren_or_literal {
                         match literal {
                             Literal::String(s) => {
-                                println!("ARGS ARGS");
-                                println!("{:#?}", vec![ASTNode::Literal(Literal::String(s.clone()))]);
                                 self.ast.push(ASTNode::FnCall {
                                     function: ident.to_string(),
                                     args: vec![ASTNode::Literal(Literal::String(s.clone()))],
                                 });
-                                println!("args len {}", self.ast.len());
                             }
                             Literal::Number(n) => {
-                                println!("ARGS ARGS");
-                                println!("{:#?}", vec![ASTNode::Literal(Literal::Number(*n))]);
                                 self.ast.push(ASTNode::FnCall {
                                     function: ident.to_string(),
                                     args: vec![ASTNode::Literal(Literal::Number(*n))],
                                 });
-                                println!("args len {}", self.ast.len());
                             }
                             // Optionally handle other literal types here
                             _ => {}
