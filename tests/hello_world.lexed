@@ -1,1 +1,0 @@
-["Import", "Identifier(\"printf\")", "From", "Identifier(\"io\")", "Semicolon", "Import", "Identifier(\"exit\")", "From", "Identifier(\"os\")", "Semicolon", "Void", "Fn(\"main\")", "Params([])", "OpenBrace", "Call(\"printf\")", "Params([StringLiteral(\"Hello World\")])", "Semicolon", "Call(\"exit\")", "Params([Number(0)])", "Semicolon", "CloseBrace"]

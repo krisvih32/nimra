@@ -1,14 +1,11 @@
-use std::{fs, io::{self, Write}};
+mod file_handling;
 mod lexer;
+mod parser;
 fn main() {
-    let mut file = String::new();
-    print!("Enter file name: ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut file).expect("Error: unable to read user input");
-    let file = file.trim();
-
-    let code = fs::read_to_string(file).expect("Error: unable to read file");
-    let lexed = lexer::lex(code.as_str());
-    println!("{:#?}", lexed);
-
+    let code = file_handling::get_code();
+    println!("{}", code);
+    let tokens = lexer::lex(code.as_str());
+    println!("{:#?}", tokens);
+    let ast = parser::parse(&tokens);
+    println!("{:#?}", ast);
 }
