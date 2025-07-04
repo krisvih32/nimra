@@ -17,13 +17,11 @@ plugins:
       uri: https://github.com/trunk-io/plugins
 lint:
   enabled:
-    - clippy@1.65.0
     - yamllint@1.37.1
     - checkov@3.2.447
     - git-diff-check
     - osv-scanner@2.0.3
     - prettier@3.6.2
-    - rustfmt@1.65.0
     - taplo@0.9.3
     - trufflehog@3.89.2
 runtimes:
