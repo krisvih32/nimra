@@ -109,10 +109,7 @@ impl CodeGen {
                 } else if function == "exit" {
                     // Only check if the argument is a literal number
                     if let Some(ASTNode::Literal(Literal::Number(n))) = args.first() {
-                        assert!(
-                            *n >= 0 && *n <= 255,
-                            "Exit should be between 0 and 255"
-                        );
+                        assert!(*n >= 0 && *n <= 255, "Exit should be between 0 and 255");
                     }
 
                     let arg_list = args
