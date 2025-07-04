@@ -1,5 +1,5 @@
 import exit from os;
 
 void fn main() {
-    exit(1);
+    exit(255);
 }
