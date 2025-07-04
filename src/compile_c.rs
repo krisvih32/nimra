@@ -33,7 +33,7 @@ pub fn compile(c: &str) -> Result<PathBuf, String> {
 
     // 4. Run gcc
     let status = Command::new("gcc")
-        .args(&flags)
+        .args(flags)
         .arg(&src_path)
         .arg("-o")
         .arg(out_path)

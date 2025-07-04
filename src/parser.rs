@@ -53,10 +53,10 @@ impl<'a> Parser<'a> {
             self.pos += 1;
             match token {
                 Token::Literal(_) => {
-                    return Err("Unexpected literal".to_string());
+                    Err("Unexpected literal".to_string())
                 }
                 Token::Semicolon => {
-                    return Err("Unexpected semicolon".to_string());
+                    Err("Unexpected semicolon".to_string())
                 }
                 Token::Import => {
                     let name: &Token = self
@@ -102,7 +102,7 @@ impl<'a> Parser<'a> {
                     Ok(true)
                 }
                 Token::From => {
-                    return Err("Unexpected from".to_string());
+                    Err("Unexpected from".to_string())
                 }
                 Token::Type(return_type) => {
                     let fn_token = self
@@ -173,7 +173,7 @@ impl<'a> Parser<'a> {
                     Ok(true)
                 }
                 Token::Fn => {
-                    return Err("Unexpected fn".to_string());
+                    Err("Unexpected fn".to_string())
                 }
                 Token::Identifier(ident) => {
                     let open_paren = self
@@ -241,19 +241,19 @@ impl<'a> Parser<'a> {
                     Ok(true)
                 }
                 Token::OpenBrace => {
-                    return Err("Unexpected open brace".to_string());
+                    Err("Unexpected open brace".to_string())
                 }
                 Token::CloseBrace => {
-                    return Err("Unexpected close brace".to_string());
+                    Err("Unexpected close brace".to_string())
                 }
                 Token::Unknown(_) => {
-                    return Err("Syntax error".to_string());
+                    Err("Syntax error".to_string())
                 }
                 Token::CloseParen => {
-                    return Err("Unexpected close paren".to_string());
+                    Err("Unexpected close paren".to_string())
                 }
                 Token::OpenParen => {
-                    return Err("Unexpected open paren".to_string());
+                    Err("Unexpected open paren".to_string())
                 }
             }
         } else {
