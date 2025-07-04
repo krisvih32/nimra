@@ -1,5 +1,6 @@
 use crate::lexer::{Literal, Type};
 use crate::parser::ASTNode;
+
 #[derive(Clone, Debug)]
 pub enum ICInstruction {
     Literal(Literal),
@@ -31,15 +32,20 @@ impl Generator {
         let pos = 0;
         Generator { ic, ast, pos }
     }
-    pub fn generate(&mut self) -> Vec<ICInstruction> {
-        while self.generate_one_ic() {}
-        self.ic.clone()
+
+    pub fn generate(&mut self) -> Result<Vec<ICInstruction>, String> {
+        while self.generate_one_ic()? {}
+        Ok(self.ic.clone())
     }
-    fn generate_one_ic(&mut self) -> bool {
+
+    fn generate_one_ic(&mut self) -> Result<bool, String> {
         if self.pos == self.ast.len() {
-            return false;
+            return Ok(false);
         }
-        let ast_node = &self.ast[self.pos];
+        let ast_node = self
+            .ast
+            .get(self.pos)
+            .ok_or_else(|| format!("AST index {} out of bounds", self.pos))?;
         self.pos += 1;
         match ast_node {
             ASTNode::Literal(lit) => self.ic.push(ICInstruction::Literal(lit.clone())),
@@ -67,10 +73,10 @@ impl Generator {
                 });
             }
         }
-        true
+        Ok(true)
     }
 }
 
-pub fn generate(ast: Vec<ASTNode>) -> Vec<ICInstruction> {
+pub fn generate(ast: Vec<ASTNode>) -> Result<Vec<ICInstruction>, String> {
     Generator::new(ast).generate()
 }

@@ -27,8 +27,13 @@ pub struct Parser<'a> {
 
 pub fn parse(tokens: &Vec<Token>) -> Vec<ASTNode> {
     let mut parser = Parser::new(tokens);
-    parser.parse();
-    parser.ast
+    match parser.parse() {
+        Ok(ast) => ast.clone(),
+        Err(e) => {
+            eprintln!("Parse error: {e}");
+            Vec::new()
+        }
+    }
 }
 
 impl<'a> Parser<'a> {
@@ -38,45 +43,54 @@ impl<'a> Parser<'a> {
         Parser { tokens, pos, ast }
     }
 
-    pub fn parse(&mut self) -> &Vec<ASTNode> {
-        while self.parse_token() {}
-        &self.ast
+    pub fn parse(&mut self) -> Result<&Vec<ASTNode>, String> {
+        while let Ok(true) = self.parse_token() {}
+        Ok(&self.ast)
     }
 
-    fn parse_token(&mut self) -> bool {
+    pub fn parse_token(&mut self) -> Result<bool, String> {
         if let Some(token) = self.tokens.get(self.pos) {
             self.pos += 1;
             match token {
                 Token::Literal(_) => {
-                    panic!("Unexpected literal")
+                    return Err("Unexpected literal".to_string());
                 }
                 Token::Semicolon => {
-                    // This should never happen
-                    panic!("Unexpected semicolon")
+                    return Err("Unexpected semicolon".to_string());
                 }
                 Token::Import => {
-                    let name: &Token = self.tokens.get(self.pos).expect("EOF");
+                    let name: &Token = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected identifier after import")?;
                     if !matches!(*name, Token::Identifier(_)) {
-                        panic!("Second word of import is not identifier");
+                        return Err("Second word of import is not identifier".to_string());
                     }
                     self.pos += 1;
-                    let from: &Token = self.tokens.get(self.pos).expect("EOF");
+                    let from: &Token = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected 'from' after import identifier")?;
                     if !matches!(*from, Token::From) {
-                        panic!("Third word of import is not from")
+                        return Err("Third word of import is not from".to_string());
                     }
                     self.pos += 1;
-                    let module: &Token = self.tokens.get(self.pos).expect("EOF");
+                    let module: &Token = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected module identifier after from")?;
                     if !matches!(*module, Token::Identifier(_)) {
-                        panic!("Fourth word of import is not identifier")
+                        return Err("Fourth word of import is not identifier".to_string());
                     }
                     self.pos += 1;
-                    let semicolon: &Token = self.tokens.get(self.pos).unwrap();
+                    let semicolon: &Token = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected semicolon after import statement")?;
                     if !matches!(semicolon, Token::Semicolon) {
-                        panic!("Last character of import is not semicolon")
+                        return Err("Last character of import is not semicolon".to_string());
                     }
                     self.pos += 1;
-                    // Construct AST Node
-
                     if let Token::Identifier(module) = module {
                         if let Token::Identifier(name) = name {
                             self.ast.push(ASTNode::Import {
@@ -85,40 +99,52 @@ impl<'a> Parser<'a> {
                             })
                         }
                     }
-                    true
+                    Ok(true)
                 }
                 Token::From => {
-                    panic!("Unexpected from");
+                    return Err("Unexpected from".to_string());
                 }
                 Token::Type(return_type) => {
-                    // This is type, function decl
-                    let fn_token = self.tokens.get(self.pos).expect("EOF");
+                    let fn_token = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected fn after type")?;
                     if !matches!(fn_token, Token::Fn) {
-                        panic!("fn expected after type")
+                        return Err("fn expected after type".to_string());
                     }
                     self.pos += 1;
-                    let fn_name = self.tokens.get(self.pos).expect("EOF");
+                    let fn_name = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected function name after fn")?;
                     if !matches!(fn_name, Token::Identifier(_)) {
-                        panic!("Function name expected after fn")
+                        return Err("Function name expected after fn".to_string());
                     }
                     self.pos += 1;
-                    let open_paren = self.tokens.get(self.pos).expect("EOF");
+                    let open_paren = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected open paren after function name")?;
                     if !matches!(open_paren, Token::OpenParen) {
-                        panic!("Open paren expected after function name")
+                        return Err("Open paren expected after function name".to_string());
                     }
                     self.pos += 1;
-                    let close_paren = self.tokens.get(self.pos).expect("EOF");
+                    let close_paren = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected close paren after open paren")?;
                     if !matches!(close_paren, Token::CloseParen) {
-                        panic!("Close paren expected after open paren")
+                        return Err("Close paren expected after open paren".to_string());
                     }
                     self.pos += 1;
-                    let open_brace = self.tokens.get(self.pos).expect("EOF");
+                    let open_brace = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected open brace after close paren")?;
                     if !matches!(open_brace, Token::OpenBrace) {
-                        panic!("Expected open brace")
+                        return Err("Expected open brace".to_string());
                     }
                     self.pos += 1;
-                    // We need to parse the function body
-                    // Keep going until close brace and log everything
                     let mut fn_tokens = Vec::new();
                     let mut close_brace_passed = false;
                     while !close_brace_passed {
@@ -129,10 +155,13 @@ impl<'a> Parser<'a> {
                             } else {
                                 close_brace_passed = true
                             }
+                        } else {
+                            return Err(
+                                "Unexpected EOF: expected close brace in function body".to_string()
+                            );
                         }
                     }
                     let fn_ast = parse(&fn_tokens);
-                    // Make fn name string
                     if let Token::Identifier(fn_name_str) = fn_name {
                         self.ast.push(ASTNode::FnDecl {
                             name: fn_name_str.clone(),
@@ -141,50 +170,57 @@ impl<'a> Parser<'a> {
                             return_type: return_type.clone(),
                         });
                     }
-                    true
+                    Ok(true)
                 }
-
                 Token::Fn => {
-                    panic!("Unexpected fn")
+                    return Err("Unexpected fn".to_string());
                 }
                 Token::Identifier(ident) => {
-                    // This is a call
-                    let open_paren = self.tokens.get(self.pos).expect("EOF");
+                    let open_paren = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected open paren after identifier")?;
                     if !matches!(*open_paren, Token::OpenParen) {
-                        panic!("Expected open paren")
+                        return Err("Expected open paren".to_string());
                     }
                     self.pos += 1;
-                    let close_paren_or_literal = self.tokens.get(self.pos).expect("EOF");
+                    let close_paren_or_literal = self.tokens.get(self.pos).ok_or(
+                        "Unexpected EOF: expected close paren or literal after open paren",
+                    )?;
                     self.pos += 1;
                     if !matches!(*close_paren_or_literal, Token::CloseParen) {
                         let mut continue_execution = false;
                         if matches!(*close_paren_or_literal, Token::Literal(_)) {
-                            // Make sure after that is close paren
-                            let close_paren = self.tokens.get(self.pos).expect("EOF");
+                            let close_paren = self
+                                .tokens
+                                .get(self.pos)
+                                .ok_or("Unexpected EOF: expected close paren after literal")?;
                             self.pos += 1;
                             if !matches!(*close_paren, Token::CloseParen) {
-                                panic!("Expected close paren")
+                                return Err("Expected close paren".to_string());
                             }
                             continue_execution = true
                         }
                         if !continue_execution {
-                            panic!("Expected close paren or literal")
+                            return Err("Expected close paren or literal".to_string());
                         }
                     } else {
-                        // For assurance, set close_paren_or_literal to the literal
-                        let close_paren_or_literal: &Token =
-                            self.tokens.get(self.pos).expect("EOF");
+                        let close_paren_or_literal: &Token = self
+                            .tokens
+                            .get(self.pos)
+                            .ok_or("Unexpected EOF: expected literal after close paren")?;
                         self.pos += 1;
                         if !matches!(*close_paren_or_literal, Token::Literal(_)) {
-                            panic!("Expected literal")
+                            return Err("Expected literal".to_string());
                         }
                     }
-
-                    // Next, we need semicolon
-                    let semicolon = self.tokens.get(self.pos).expect("EOF");
+                    let semicolon = self
+                        .tokens
+                        .get(self.pos)
+                        .ok_or("Unexpected EOF: expected semicolon after function call")?;
                     self.pos += 1;
                     if !matches!(semicolon, Token::Semicolon) {
-                        panic!("Expected semicolon");
+                        return Err("Expected semicolon".to_string());
                     }
                     if let Token::Literal(literal) = close_paren_or_literal {
                         match literal {
@@ -202,27 +238,26 @@ impl<'a> Parser<'a> {
                             }
                         }
                     }
-
-                    true
+                    Ok(true)
                 }
                 Token::OpenBrace => {
-                    panic!("Unexpected open brace")
+                    return Err("Unexpected open brace".to_string());
                 }
                 Token::CloseBrace => {
-                    panic!("Unexpected close brace")
+                    return Err("Unexpected close brace".to_string());
                 }
                 Token::Unknown(_) => {
-                    panic!("Syntax error")
+                    return Err("Syntax error".to_string());
                 }
                 Token::CloseParen => {
-                    panic!("Unexpected close paren");
+                    return Err("Unexpected close paren".to_string());
                 }
                 Token::OpenParen => {
-                    panic!("Unexpected open paren");
+                    return Err("Unexpected open paren".to_string());
                 }
             }
         } else {
-            false
+            Ok(false)
         }
     }
 }

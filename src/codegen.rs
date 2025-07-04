@@ -23,22 +23,22 @@ impl CodeGen {
         }
     }
 
-    pub fn generate(&mut self) -> String {
+    pub fn generate(&mut self) -> Result<String, String> {
         if self.needs_stdlib {
             self.code.push_str("#include <stdlib.h>\n");
         }
         while self.pos < self.ic.len() {
             self.code
-                .push_str(&self.generate_instruction(&self.ic[self.pos]));
+                .push_str(&self.generate_instruction(&self.ic[self.pos])?);
             self.pos += 1;
         }
-        self.code.clone()
+        Ok(self.code.clone())
     }
 
-    fn generate_instruction(&self, ic: &ICInstruction) -> String {
+    fn generate_instruction(&self, ic: &ICInstruction) -> Result<String, String> {
         match ic {
-            ICInstruction::Literal(lit) => format!("{};", self.literal_to_c(lit)),
-            ICInstruction::Import { .. } => String::new(),
+            ICInstruction::Literal(lit) => Ok(format!("{};", self.literal_to_c(lit))),
+            ICInstruction::Import { .. } => Ok(String::new()),
             ICInstruction::FnCall { function, args } => {
                 if function == "return" {
                     let arg_str = if let Some(arg) = args.first() {
@@ -46,21 +46,21 @@ impl CodeGen {
                     } else {
                         String::new()
                     };
-                    format!("return {arg_str};")
+                    Ok(format!("return {arg_str};"))
                 } else if function == "exit" {
                     let arg_list = args
                         .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
-                    format!("exit({arg_list});")
+                    Ok(format!("exit({arg_list});"))
                 } else {
                     let arg_list = args
                         .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
-                    format!("{function}({arg_list});")
+                    Ok(format!("{function}({arg_list});"))
                 }
             }
             ICInstruction::FnDecl {
@@ -85,19 +85,19 @@ impl CodeGen {
                 };
                 let mut body_code = String::new();
                 for stmt in body {
-                    body_code.push_str(&self.ast_node_to_c(stmt));
+                    body_code.push_str(&self.ast_node_to_c(stmt)?);
                 }
                 if is_main && !has_explicit_return_or_exit(body) {
                     body_code.push_str("return 0;");
                 }
-                format!("{ret_type} {name}({arg_list}) {{{body_code}}}")
+                Ok(format!("{ret_type} {name}({arg_list}) {{{body_code}}}"))
             }
         }
     }
 
-    fn ast_node_to_c(&self, node: &ASTNode) -> String {
+    fn ast_node_to_c(&self, node: &ASTNode) -> Result<String, String> {
         match node {
-            ASTNode::Literal(lit) => format!("{};", self.literal_to_c(lit)),
+            ASTNode::Literal(lit) => Ok(format!("{};", self.literal_to_c(lit))),
             ASTNode::FnCall { function, args } => {
                 if function == "return" {
                     let arg_str = if let Some(arg) = args.first() {
@@ -105,29 +105,29 @@ impl CodeGen {
                     } else {
                         String::new()
                     };
-                    format!("return {arg_str};")
+                    Ok(format!("return {arg_str};"))
                 } else if function == "exit" {
-                    // Only check if the argument is a literal number
                     if let Some(ASTNode::Literal(Literal::Number(n))) = args.first() {
-                        assert!(*n >= 0 && *n <= 255, "Exit should be between 0 and 255");
+                        if !(*n >= 0 && *n <= 255) {
+                            return Err("Exit should be between 0 and 255".to_string());
+                        }
                     }
-
                     let arg_list = args
                         .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
-                    format!("exit({arg_list});")
+                    Ok(format!("exit({arg_list});"))
                 } else {
                     let arg_list = args
                         .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
-                    format!("{function}({arg_list});")
+                    Ok(format!("{function}({arg_list});"))
                 }
             }
-            ASTNode::Import { .. } => String::new(),
+            ASTNode::Import { .. } => Ok(String::new()),
             ASTNode::FnDecl {
                 name,
                 args,
@@ -150,12 +150,12 @@ impl CodeGen {
                 };
                 let mut body_code = String::new();
                 for stmt in body {
-                    body_code.push_str(&self.ast_node_to_c(stmt));
+                    body_code.push_str(&self.ast_node_to_c(stmt)?);
                 }
                 if is_main && !has_explicit_return_or_exit(body) {
                     body_code.push_str("return 0;");
                 }
-                format!("{ret_type} {name}({arg_list}) {{{body_code}}}")
+                Ok(format!("{ret_type} {name}({arg_list}) {{{body_code}}}"))
             }
         }
     }
@@ -164,7 +164,6 @@ impl CodeGen {
     fn ast_node_expr(&self, node: &ASTNode) -> String {
         match node {
             ASTNode::Literal(lit) => self.literal_to_c(lit),
-            // Extend for more expression types if needed
             _ => String::new(),
         }
     }
@@ -215,6 +214,6 @@ fn contains_exit_call_ast(ast: &ASTNode) -> bool {
     }
 }
 
-pub fn codegen(ic: Vec<ICInstruction>) -> String {
+pub fn codegen(ic: Vec<ICInstruction>) -> Result<String, String> {
     CodeGen::new(ic).generate()
 }
