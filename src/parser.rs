@@ -52,12 +52,8 @@ impl<'a> Parser<'a> {
         if let Some(token) = self.tokens.get(self.pos) {
             self.pos += 1;
             match token {
-                Token::Literal(_) => {
-                    Err("Unexpected literal".to_string())
-                }
-                Token::Semicolon => {
-                    Err("Unexpected semicolon".to_string())
-                }
+                Token::Literal(_) => Err("Unexpected literal".to_string()),
+                Token::Semicolon => Err("Unexpected semicolon".to_string()),
                 Token::Import => {
                     let name: &Token = self
                         .tokens
@@ -101,9 +97,7 @@ impl<'a> Parser<'a> {
                     }
                     Ok(true)
                 }
-                Token::From => {
-                    Err("Unexpected from".to_string())
-                }
+                Token::From => Err("Unexpected from".to_string()),
                 Token::Type(return_type) => {
                     let fn_token = self
                         .tokens
@@ -172,9 +166,7 @@ impl<'a> Parser<'a> {
                     }
                     Ok(true)
                 }
-                Token::Fn => {
-                    Err("Unexpected fn".to_string())
-                }
+                Token::Fn => Err("Unexpected fn".to_string()),
                 Token::Identifier(ident) => {
                     let open_paren = self
                         .tokens
@@ -240,21 +232,11 @@ impl<'a> Parser<'a> {
                     }
                     Ok(true)
                 }
-                Token::OpenBrace => {
-                    Err("Unexpected open brace".to_string())
-                }
-                Token::CloseBrace => {
-                    Err("Unexpected close brace".to_string())
-                }
-                Token::Unknown(_) => {
-                    Err("Syntax error".to_string())
-                }
-                Token::CloseParen => {
-                    Err("Unexpected close paren".to_string())
-                }
-                Token::OpenParen => {
-                    Err("Unexpected open paren".to_string())
-                }
+                Token::OpenBrace => Err("Unexpected open brace".to_string()),
+                Token::CloseBrace => Err("Unexpected close brace".to_string()),
+                Token::Unknown(_) => Err("Syntax error".to_string()),
+                Token::CloseParen => Err("Unexpected close paren".to_string()),
+                Token::OpenParen => Err("Unexpected open paren".to_string()),
             }
         } else {
             Ok(false)
