@@ -12,6 +12,7 @@ pub struct CodeGen {
 }
 
 impl CodeGen {
+    // Creates a new code generator using a vector of ICInstructions
     pub fn new(ic: Vec<ICInstruction>) -> Self {
         let needs_stdlib = ic.iter().any(|ic| contains_exit_call_ic(ic));
         CodeGen {
@@ -27,7 +28,8 @@ impl CodeGen {
             self.code.push_str("#include <stdlib.h>\n");
         }
         while self.pos < self.ic.len() {
-            self.code.push_str(&self.generate_instruction(&self.ic[self.pos]));
+            self.code
+                .push_str(&self.generate_instruction(&self.ic[self.pos]));
             self.pos += 1;
         }
         self.code.clone()
@@ -46,24 +48,40 @@ impl CodeGen {
                     };
                     format!("return {};", arg_str)
                 } else if function == "exit" {
-                    let arg_list = args.iter()
+                    let arg_list = args
+                        .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
                     format!("exit({});", arg_list)
                 } else {
-                    let arg_list = args.iter()
+                    let arg_list = args
+                        .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
                     format!("{}({});", function, arg_list)
                 }
             }
-            ICInstruction::FnDecl { name, args, body, return_type } => {
+            ICInstruction::FnDecl {
+                name,
+                args,
+                body,
+                return_type,
+            } => {
                 let is_main = name == "main";
-                let ret_type = if is_main { "int" } else { self.type_to_c(return_type) };
-                let arg_list = if args.is_empty() { "void".to_string() } else {
-                    args.iter().map(|_| "void".to_string()).collect::<Vec<_>>().join(", ")
+                let ret_type = if is_main {
+                    "int"
+                } else {
+                    self.type_to_c(return_type)
+                };
+                let arg_list = if args.is_empty() {
+                    "void".to_string()
+                } else {
+                    args.iter()
+                        .map(|_| "void".to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 };
                 let mut body_code = String::new();
                 for stmt in body {
@@ -89,13 +107,15 @@ impl CodeGen {
                     };
                     format!("return {};", arg_str)
                 } else if function == "exit" {
-                    let arg_list = args.iter()
+                    let arg_list = args
+                        .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
                     format!("exit({});", arg_list)
                 } else {
-                    let arg_list = args.iter()
+                    let arg_list = args
+                        .iter()
                         .map(|arg| self.ast_node_expr(arg))
                         .collect::<Vec<_>>()
                         .join(", ");
@@ -103,11 +123,25 @@ impl CodeGen {
                 }
             }
             ASTNode::Import { .. } => String::new(),
-            ASTNode::FnDecl { name, args, body, return_type } => {
+            ASTNode::FnDecl {
+                name,
+                args,
+                body,
+                return_type,
+            } => {
                 let is_main = name == "main";
-                let ret_type = if is_main { "int" } else { self.type_to_c(return_type) };
-                let arg_list = if args.is_empty() { "void".to_string() } else {
-                    args.iter().map(|_| "void".to_string()).collect::<Vec<_>>().join(", ")
+                let ret_type = if is_main {
+                    "int"
+                } else {
+                    self.type_to_c(return_type)
+                };
+                let arg_list = if args.is_empty() {
+                    "void".to_string()
+                } else {
+                    args.iter()
+                        .map(|_| "void".to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 };
                 let mut body_code = String::new();
                 for stmt in body {
@@ -147,9 +181,13 @@ impl CodeGen {
 fn has_explicit_return_or_exit(stmts: &[ASTNode]) -> bool {
     for stmt in stmts {
         match stmt {
-            ASTNode::FnCall { function, .. } if function == "return" || function == "exit" => return true,
+            ASTNode::FnCall { function, .. } if function == "return" || function == "exit" => {
+                return true
+            }
             ASTNode::FnDecl { body, .. } => {
-                if has_explicit_return_or_exit(body) { return true; }
+                if has_explicit_return_or_exit(body) {
+                    return true;
+                }
             }
             _ => {}
         }

@@ -1,7 +1,8 @@
 use std::fs::File;
 use std::io::Write;
 use std::process::{Command, Stdio};
-use tempfile::{NamedTempFile, Builder};
+extern crate tempfile;
+use self::tempfile::{Builder, NamedTempFile};
 use std::path::PathBuf;
 
 pub fn compile(c: &str) -> std::io::Result<PathBuf> {
@@ -11,7 +12,11 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
     let src_path = src.path().to_path_buf();
 
     // 2. Create a temp output file for the binary
-    let out_path = Builder::new().prefix("nimra-bin-").tempfile()?.into_temp_path().to_path_buf();
+    let out_path = Builder::new()
+        .prefix("nimra-bin-")
+        .tempfile()?
+        .into_temp_path()
+        .to_path_buf();
 
     // 3. GCC flags
     let flags = [
@@ -27,7 +32,7 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
 
     // 4. Run gcc
     let status = Command::new("gcc")
-        .args(&flags)
+        .args(flags)
         .arg(&src_path)
         .arg("-o")
         .arg(&out_path)
@@ -36,10 +41,7 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
         .status()?;
 
     if !status.success() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "gcc failed",
-        ));
+        return Err(std::io::Error::other("gcc failed"));
     }
 
     Ok(out_path)
