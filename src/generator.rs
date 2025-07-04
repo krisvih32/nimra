@@ -1,7 +1,8 @@
+use crate::lexer::{Literal, Type};
 use crate::parser::ASTNode;
-use crate::lexer::{Type, Literal};
 #[derive(Clone, Debug)]
 pub enum ICInstruction {
+    Literal(Literal),
     FnDecl {
         name: String,
         args: Vec<ASTNode>,
@@ -12,7 +13,6 @@ pub enum ICInstruction {
         function: String,
         args: Vec<ASTNode>,
     },
-    Literal(Literal),
     Import {
         module: String,
         name: String,
@@ -22,43 +22,44 @@ pub enum ICInstruction {
 pub struct Generator {
     ic: Vec<ICInstruction>,
     ast: Vec<ASTNode>,
-    pos: usize
+    pos: usize,
 }
 
 impl Generator {
     pub fn new(ast: Vec<ASTNode>) -> Generator {
         let ic = Vec::new();
         let pos = 0;
-        Generator{ic, ast, pos}
+        Generator { ic, ast, pos }
     }
-    pub fn generate(&mut self,) -> Vec<ICInstruction> {
+    pub fn generate(&mut self) -> Vec<ICInstruction> {
         while self.generate_one_ic() {}
         self.ic.clone()
     }
     fn generate_one_ic(&mut self) -> bool {
-        if self.pos == self.ast.len() {return false;}
+        if self.pos == self.ast.len() {
+            return false;
+        }
         let ast_node = &self.ast[self.pos];
         self.pos += 1;
         match ast_node {
-            ASTNode::Literal(literal) => {
-                self.ic.push(ICInstruction::Literal(literal.clone()))
-            }
+            ASTNode::Literal(lit) => self.ic.push(ICInstruction::Literal(lit.clone())),
             ASTNode::FnCall { function, args } => {
-                self.ic.push(ICInstruction::FnCall { 
-                    function: function.clone(), args: args.clone() 
+                self.ic.push(ICInstruction::FnCall {
+                    function: function.clone(),
+                    args: args.clone(),
                 });
             }
-            ASTNode::FnDecl { 
-                name, 
-                args, 
-                body, 
-                return_type } => {
-                    self.ic.push(ICInstruction::FnDecl { 
-                        name: name.clone(), 
-                        args: args.clone(), 
-                        body: body.clone(), 
-                        return_type: return_type.clone() })
-            }
+            ASTNode::FnDecl {
+                name,
+                args,
+                body,
+                return_type,
+            } => self.ic.push(ICInstruction::FnDecl {
+                name: name.clone(),
+                args: args.clone(),
+                body: body.clone(),
+                return_type: return_type.clone(),
+            }),
             ASTNode::Import { module, name } => {
                 self.ic.push(ICInstruction::Import {
                     module: module.clone(),
@@ -71,5 +72,5 @@ impl Generator {
 }
 
 pub fn generate(ast: Vec<ASTNode>) -> Vec<ICInstruction> {
-    Generator::new(ast).generate()}
-
+    Generator::new(ast).generate()
+}

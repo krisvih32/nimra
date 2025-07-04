@@ -11,3 +11,4 @@ missing_docs = "deny"
 unsafe_code = "deny"
 
 [dependencies]
+tempfile = "3"

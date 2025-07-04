@@ -1,4 +1,3 @@
-
 use crate::lexer::{Literal, Token, Type};
 
 #[derive(Debug, Clone)]
@@ -50,7 +49,7 @@ impl<'a> Parser<'a> {
             match token {
                 Token::Literal(_) => {
                     panic!("Unexpected literal")
-                },
+                }
                 Token::Semicolon => {
                     // This should never happen
                     panic!("Unexpected semicolon")
@@ -113,7 +112,7 @@ impl<'a> Parser<'a> {
                         panic!("Close paren expected after open paren")
                     }
                     self.pos += 1;
-                    let open_brace= self.tokens.get(self.pos).expect("EOF");
+                    let open_brace = self.tokens.get(self.pos).expect("EOF");
                     if !matches!(open_brace, Token::OpenBrace) {
                         panic!("Expected open brace")
                     }
@@ -173,13 +172,14 @@ impl<'a> Parser<'a> {
                         }
                     } else {
                         // For assurance, set close_paren_or_literal to the literal
-                        let close_paren_or_literal: &Token = self.tokens.get(self.pos).expect("EOF");
+                        let close_paren_or_literal: &Token =
+                            self.tokens.get(self.pos).expect("EOF");
                         self.pos += 1;
                         if !matches!(*close_paren_or_literal, Token::Literal(_)) {
                             panic!("Expected literal")
                         }
                     }
-                    
+
                     // Next, we need semicolon
                     let semicolon = self.tokens.get(self.pos).expect("EOF");
                     self.pos += 1;
@@ -200,11 +200,8 @@ impl<'a> Parser<'a> {
                                     args: vec![ASTNode::Literal(Literal::Number(*n))],
                                 });
                             }
-                            // Optionally handle other literal types here
-                            _ => {}
                         }
                     }
-
 
                     true
                 }
