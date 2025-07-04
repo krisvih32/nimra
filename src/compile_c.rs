@@ -11,11 +11,7 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
     let src_path = src.path().to_path_buf();
 
     // 2. Create a temp output file for the binary
-    let out_path = Builder::new()
-        .prefix("nimra-bin-")
-        .tempfile()?
-        .into_temp_path()
-        .to_path_buf();
+    let out_path = "./a.out";
 
     // 3. GCC flags
     let flags = [
@@ -34,7 +30,7 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
         .args(flags)
         .arg(&src_path)
         .arg("-o")
-        .arg(&out_path)
+        .arg(out_path)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()?;
@@ -43,5 +39,5 @@ pub fn compile(c: &str) -> std::io::Result<PathBuf> {
         return Err(std::io::Error::other("gcc failed"));
     }
 
-    Ok(out_path)
+    Ok(PathBuf::from(out_path))
 }
