@@ -135,7 +135,7 @@ impl<'a> Parser<'a> {
                     // Make fn name string
                     if let Token::Identifier(fn_name_str) = fn_name {
                         self.ast.push(ASTNode::FnDecl {
-                            name: String::from(fn_name_str.clone()),
+                            name: fn_name_str.clone(),
                             args: Vec::new(),
                             body: fn_ast,
                             return_type: return_type.clone(),
@@ -222,7 +222,7 @@ impl<'a> Parser<'a> {
                 }
             }
         } else {
-            return false;
+            false
         }
     }
 }
