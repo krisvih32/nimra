@@ -17,8 +17,9 @@ plugins:
       uri: https://github.com/trunk-io/plugins
 lint:
   enabled:
+    - rustfmt@1.65.0
     - yamllint@1.37.1
-    - checkov@3.2.447
+    - checkov@3.2.450
     - git-diff-check
     - osv-scanner@2.0.3
     - prettier@3.6.2
